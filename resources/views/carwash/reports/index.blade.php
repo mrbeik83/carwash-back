@@ -1,0 +1,6 @@
+@extends('layouts.panel')
+@section('title', 'گزارش‌ها')
+@section('navigation') @include('carwash.partials.navigation') @endsection
+@section('content')
+<h1 class="mb-6 text-2xl font-bold">گزارش عملکرد</h1><form class="mb-5 flex gap-3"><input type="date" name="from" value="{{ $from->format('Y-m-d') }}" class="rounded-xl border p-3"><input type="date" name="to" value="{{ $to->format('Y-m-d') }}" class="rounded-xl border p-3"><button class="rounded-xl bg-slate-900 px-5 text-white">اعمال</button></form><div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">@foreach(['کل رزرو'=>$summary['total_bookings'],'تکمیل'=>$summary['completed'],'لغو'=>$summary['cancelled'],'عدم مراجعه'=>$summary['no_show'],'فروش ریال'=>number_format($summary['revenue'])] as $k=>$v)<div class="rounded-2xl bg-white p-5 shadow-sm"><div class="text-sm text-slate-500">{{ $k }}</div><div class="text-2xl font-bold">{{ $v }}</div></div>@endforeach</div><div class="overflow-x-auto rounded-2xl bg-white shadow-sm"><table class="w-full"><thead class="bg-slate-100"><tr><th class="p-3">روز</th><th>رزرو</th><th>فروش ریال</th></tr></thead><tbody>@foreach($daily as $row)<tr class="border-t"><td class="p-3">{{ $row->day }}</td><td>{{ $row->bookings }}</td><td>{{ number_format($row->revenue) }}</td></tr>@endforeach</tbody></table></div>
+@endsection

@@ -1,0 +1,75 @@
+# فهرست فایل‌های اضافه و اصلاح‌شده
+
+## فایل‌های اضافه‌شده
+
+- `app/Actions/Bookings/CreateBookingAction.php`
+- `app/Actions/CarWashes/CreateCarWashAction.php`
+- `app/Http/Controllers/Auth/AuthenticatedSessionController.php`
+- `app/Http/Requests/Admin/StoreCarWashRequest.php`
+- `config/cors.php`
+- `database/migrations/2026_07_28_000010_add_is_super_admin_to_users_table.php`
+- `database/migrations/2026_07_28_000050_create_cache_and_queue_tables.php`
+- `docs/07-CODE-REVIEW-FIXES.md`
+- `resources/css/app.css`
+- `resources/js/app.js`
+- `resources/js/bootstrap.js`
+- `resources/views/admin/car-washes/_form.blade.php`
+- `resources/views/admin/car-washes/create.blade.php`
+- `resources/views/admin/car-washes/edit.blade.php`
+- `resources/views/auth/login.blade.php`
+- `resources/views/auth/no-access.blade.php`
+- `resources/views/invitations/show.blade.php`
+- `scripts/verify-fresh.ps1`
+- `scripts/verify-fresh.sh`
+- `tests/Feature/Authorization/OperatorBookingTransitionTest.php`
+- `tests/Feature/Database/DatabaseSeederSmokeTest.php`
+- `tests/Feature/Routing/ApiRoutesTest.php`
+- `tests/TestCase.php`
+## فایل‌های اصلاح‌شده
+
+- `.env.example`
+- `README.md`
+- `app/Enums/RoleName.php`
+- `app/Http/Controllers/Admin/CarWashController.php`
+- `app/Http/Controllers/Api/V1/Auth/OtpController.php`
+- `app/Http/Controllers/Api/V1/BookingController.php`
+- `app/Http/Controllers/Api/V1/PublicCarWashController.php`
+- `app/Http/Controllers/CarWashPanel/BookingController.php`
+- `app/Http/Controllers/CarWashPanel/MemberController.php`
+- `app/Http/Controllers/CarWashPanel/PaymentController.php`
+- `app/Http/Controllers/CarWashPanel/ReportController.php`
+- `app/Http/Controllers/CarWashPanel/ScheduleController.php`
+- `app/Http/Controllers/InvitationController.php`
+- `app/Http/Middleware/EnsureActiveCarWashMember.php`
+- `app/Http/Middleware/SetCarWashPermissionContext.php`
+- `app/Http/Requests/CarWashPanel/InviteMemberRequest.php`
+- `app/Http/Requests/CarWashPanel/StoreScheduleExceptionRequest.php`
+- `app/Http/Requests/CarWashPanel/StoreServiceRequest.php`
+- `app/Models/Booking.php`
+- `app/Models/BookingItem.php`
+- `app/Models/User.php`
+- `app/Providers/AppServiceProvider.php`
+- `app/Services/BookingLifecycleService.php`
+- `app/Services/CarWashDashboardService.php`
+- `app/Services/CarWashInvitationService.php`
+- `app/Services/CarWashMemberService.php`
+- `app/Services/OtpService.php`
+- `app/Services/SlotGenerationService.php`
+- `bootstrap/app.php`
+- `config/carwash.php`
+- `database/factories/BookingFactory.php`
+- `database/factories/UserFactory.php`
+- `database/seeders/DatabaseSeeder.php`
+- `database/seeders/RolesAndPermissionsSeeder.php`
+- `database/seeders/SuperAdminSeeder.php`
+- `docs/01-ARCHITECTURE.md`
+- `docs/IMPLEMENTATION-STATUS.md`
+- `docs/REFERENCES.md`
+- `resources/views/admin/car-washes/index.blade.php`
+- `resources/views/admin/car-washes/show.blade.php`
+- `resources/views/layouts/panel.blade.php`
+- `routes/admin.php`
+- `routes/api.php`
+- `routes/carwash.php`
+- `routes/web.php`
+- `tests/Feature/Authorization/CarWashTenantIsolationTest.php`

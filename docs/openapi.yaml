@@ -1,0 +1,114 @@
+openapi: 3.1.0
+info:
+  title: Carwash Booking API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/api/v1
+paths:
+  /auth/request-otp:
+    post:
+      summary: Request login OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile]
+              properties:
+                mobile: { type: string, example: "989121234567" }
+                purpose: { type: string, enum: [login, register, verify_mobile], default: login }
+      responses:
+        '200': { description: OTP requested }
+        '422': { description: Validation error }
+        '429': { description: Rate limited }
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP and start Sanctum session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, code]
+              properties:
+                mobile: { type: string }
+                code: { type: string, minLength: 6, maxLength: 6 }
+                full_name: { type: string }
+      responses:
+        '200': { description: Authenticated }
+  /car-washes/{slug}:
+    get:
+      summary: Public car wash profile and services
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Car wash }
+        '404': { description: Not found }
+  /car-washes/{slug}/availability:
+    get:
+      summary: Available booking slots
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200': { description: Available slots }
+  /me:
+    get:
+      security: [{ sanctumCookie: [] }]
+      summary: Current customer
+      responses:
+        '200': { description: User }
+        '401': { description: Unauthenticated }
+  /vehicles:
+    get:
+      security: [{ sanctumCookie: [] }]
+      summary: Customer vehicles
+      responses: { '200': { description: Vehicle list } }
+    post:
+      security: [{ sanctumCookie: [] }]
+      summary: Add vehicle
+      responses: { '201': { description: Created } }
+  /bookings:
+    get:
+      security: [{ sanctumCookie: [] }]
+      summary: Customer booking history
+      responses: { '200': { description: Paginated bookings } }
+    post:
+      security: [{ sanctumCookie: [] }]
+      summary: Create booking
+      responses:
+        '201': { description: Created }
+        '422': { description: Slot full or invalid service }
+  /bookings/{publicId}/cancel:
+    post:
+      security: [{ sanctumCookie: [] }]
+      summary: Cancel own booking within deadline
+      parameters:
+        - in: path
+          name: publicId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Cancelled }
+        '422': { description: Cancellation deadline passed }
+components:
+  securitySchemes:
+    sanctumCookie:
+      type: apiKey
+      in: cookie
+      name: laravel_session

@@ -1,0 +1,21 @@
+FINAL STATIC VALIDATION
+=======================
+PHP syntax: PASS (all application, configuration, migration, seeder, route and test PHP files)
+Blade compile + PHP lint: PASS (30 Blade templates)
+Registered routes: PASS (66 routes)
+API routes registered: PASS
+Route controller classes/methods: PASS
+Blade named-route references: PASS
+Internal App/Database/Tests imports: PASS
+Permission string declarations: PASS
+Git conflict markers: PASS (none found)
+Legacy RoleName::SUPER_ADMIN references: PASS (none found)
+Spatie teams runtime config: teams=true, team_foreign_key=car_wash_id
+Sanctum runtime guard: web
+CORS credentials: enabled for api/* and sanctum/csrf-cookie
+
+ENVIRONMENT-LIMITED CHECKS
+==========================
+MySQL migrations/seed and PHPUnit could not be executed in the inspection container because it lacks PDO drivers, mbstring, DOM and XMLWriter.
+Vite build could not be executed because the inspection environment's internal npm registry did not contain @tailwindcss/vite.
+Run scripts/verify-fresh.ps1 on the Windows development machine for the destructive end-to-end check.
