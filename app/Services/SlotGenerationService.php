@@ -16,7 +16,7 @@ class SlotGenerationService
         CarbonImmutable $from,
         CarbonImmutable $to,
     ): int {
-        $timezone = $carWash->timezone;
+        $timezone = $carWash->timezone ?: 'Asia/Tehran';
         $fromLocal = $from->setTimezone($timezone)->startOfDay();
         $toLocal = $to->setTimezone($timezone)->endOfDay();
         $created = 0;
@@ -32,9 +32,7 @@ class SlotGenerationService
                 $toLocal->toDateString(),
             ])
             ->get()
-            ->groupBy(
-                fn ($exception) => $exception->exception_date->toDateString()
-            );
+            ->groupBy(fn ($exception) => $exception->exception_date->toDateString());
 
         DB::transaction(function () use (
             $carWash,
@@ -45,19 +43,12 @@ class SlotGenerationService
             $timezone,
             &$created,
         ): void {
-            foreach (CarbonPeriod::create(
-                $fromLocal,
-                '1 day',
-                $toLocal,
-            ) as $periodDay) {
-                $date = CarbonImmutable::instance($periodDay)
-                    ->setTimezone($timezone);
+            foreach (CarbonPeriod::create($fromLocal, '1 day', $toLocal) as $periodDay) {
+                $date = CarbonImmutable::instance($periodDay)->setTimezone($timezone);
 
                 /** @var Collection $dateExceptions */
-                $dateExceptions = $exceptions->get(
-                    $date->toDateString(),
-                    collect(),
-                );
+                $dateExceptions = $exceptions->get($date->toDateString(), collect());
+                $generatedStarts = [];
 
                 $fullDayClosed = $dateExceptions->contains(
                     fn ($exception): bool => $exception->is_closed
@@ -68,107 +59,102 @@ class SlotGenerationService
                 $dayStartUtc = $date->startOfDay()->setTimezone('UTC');
                 $dayEndUtc = $date->endOfDay()->setTimezone('UTC');
 
+                if (! $fullDayClosed) {
+                    foreach ($rules->get($date->dayOfWeek, collect()) as $rule) {
+                        if ($rule->valid_from && $date->startOfDay()->isBefore($rule->valid_from->startOfDay())) {
+                            continue;
+                        }
+
+                        if ($rule->valid_until && $date->startOfDay()->isAfter($rule->valid_until->endOfDay())) {
+                            continue;
+                        }
+
+                        $cursor = CarbonImmutable::parse(
+                            $date->toDateString().' '.$rule->start_time,
+                            $timezone,
+                        );
+                        $end = CarbonImmutable::parse(
+                            $date->toDateString().' '.$rule->end_time,
+                            $timezone,
+                        );
+
+                        while ($cursor->addMinutes($rule->slot_duration_minutes)->lessThanOrEqualTo($end)) {
+                            $slotEnd = $cursor->addMinutes($rule->slot_duration_minutes);
+                            $timeKey = $cursor->format('H:i');
+                            $ruleCapacity = (int) (($rule->slot_capacities ?? [])[$timeKey] ?? $rule->capacity);
+
+                            $matchedException = $dateExceptions->first(
+                                fn ($exception): bool => $this->coversSlot($exception, $cursor, $slotEnd),
+                            );
+
+                            $isClosed = (bool) ($matchedException?->is_closed ?? false);
+                            $capacity = max(1, (int) (
+                                $matchedException?->capacity_override
+                                ?? $ruleCapacity
+                            ));
+                            $startsAtUtc = $cursor->setTimezone('UTC');
+                            $generatedStarts[] = $startsAtUtc->format('Y-m-d H:i:s');
+
+                            $slot = BookingSlot::query()->firstOrCreate(
+                                [
+                                    'car_wash_id' => $carWash->getKey(),
+                                    'starts_at' => $startsAtUtc,
+                                ],
+                                [
+                                    'ends_at' => $slotEnd->setTimezone('UTC'),
+                                    'capacity' => $capacity,
+                                    'reserved_count' => 0,
+                                    'status' => $isClosed ? 'closed' : 'open',
+                                    'source' => 'rule',
+                                ],
+                            );
+
+                            if ($slot->wasRecentlyCreated) {
+                                $created++;
+                            } else {
+                                // Keep an operator's manual override intact when the weekly plan is regenerated.
+                                // Date exceptions still have the highest priority and may close the slot.
+                                $targetCapacity = $matchedException?->capacity_override !== null
+                                    ? $capacity
+                                    : ($slot->source === 'manual'
+                                        ? (int) $slot->capacity
+                                        : $capacity);
+                                $effectiveCapacity = max((int) $slot->reserved_count, $targetCapacity);
+                                $status = $isClosed && $slot->reserved_count === 0
+                                    ? 'closed'
+                                    : ($slot->reserved_count >= $effectiveCapacity ? 'full' : 'open');
+
+                                $slot->update([
+                                    'ends_at' => $slotEnd->setTimezone('UTC'),
+                                    'capacity' => $effectiveCapacity,
+                                    'status' => $status,
+                                    'source' => $slot->source === 'manual' ? 'manual' : 'rule',
+                                ]);
+                            }
+
+                            $cursor = $slotEnd;
+                        }
+                    }
+                }
+
+                $staleSlots = BookingSlot::query()
+                    ->where('car_wash_id', $carWash->getKey())
+                    ->whereBetween('starts_at', [$dayStartUtc, $dayEndUtc])
+                    ->where('starts_at', '>=', now('UTC'))
+                    ->where('reserved_count', 0);
+
+                if ($generatedStarts !== []) {
+                    $staleSlots->whereNotIn('starts_at', $generatedStarts);
+                }
+
+                $staleSlots->update(['status' => 'closed']);
+
                 if ($fullDayClosed) {
                     BookingSlot::query()
                         ->where('car_wash_id', $carWash->getKey())
                         ->whereBetween('starts_at', [$dayStartUtc, $dayEndUtc])
                         ->where('reserved_count', 0)
                         ->update(['status' => 'closed']);
-
-                    continue;
-                }
-
-                foreach ($rules->get($date->dayOfWeek, collect()) as $rule) {
-                    if (
-                        $rule->valid_from
-                        && $date->startOfDay()->isBefore(
-                            $rule->valid_from->startOfDay()
-                        )
-                    ) {
-                        continue;
-                    }
-
-                    if (
-                        $rule->valid_until
-                        && $date->startOfDay()->isAfter(
-                            $rule->valid_until->endOfDay()
-                        )
-                    ) {
-                        continue;
-                    }
-
-                    $cursor = CarbonImmutable::parse(
-                        $date->toDateString().' '.$rule->start_time,
-                        $timezone,
-                    );
-
-                    $end = CarbonImmutable::parse(
-                        $date->toDateString().' '.$rule->end_time,
-                        $timezone,
-                    );
-
-                    while (
-                        $cursor->addMinutes(
-                            $rule->slot_duration_minutes
-                        )->lessThanOrEqualTo($end)
-                    ) {
-                        $slotEnd = $cursor->addMinutes(
-                            $rule->slot_duration_minutes
-                        );
-
-                        $matchedException = $dateExceptions->first(
-                            fn ($exception): bool => $this->coversSlot(
-                                $exception,
-                                $cursor,
-                                $slotEnd,
-                            ),
-                        );
-
-                        $isClosed = (bool) ($matchedException?->is_closed ?? false);
-                        $capacity = (int) (
-                            $matchedException?->capacity_override
-                            ?? $rule->capacity
-                        );
-
-                        $slot = BookingSlot::query()->firstOrCreate(
-                            [
-                                'car_wash_id' => $carWash->getKey(),
-                                'starts_at' => $cursor->setTimezone('UTC'),
-                            ],
-                            [
-                                'ends_at' => $slotEnd->setTimezone('UTC'),
-                                'capacity' => max(1, $capacity),
-                                'reserved_count' => 0,
-                                'status' => $isClosed ? 'closed' : 'open',
-                                'source' => 'rule',
-                            ],
-                        );
-
-                        if ($slot->wasRecentlyCreated) {
-                            $created++;
-                        } else {
-                            $effectiveCapacity = max(
-                                (int) $slot->reserved_count,
-                                max(1, $capacity),
-                            );
-
-                            $status = $isClosed && $slot->reserved_count === 0
-                                ? 'closed'
-                                : (
-                                    $slot->reserved_count >= $effectiveCapacity
-                                        ? 'full'
-                                        : 'open'
-                                );
-
-                            $slot->update([
-                                'ends_at' => $slotEnd->setTimezone('UTC'),
-                                'capacity' => $effectiveCapacity,
-                                'status' => $status,
-                            ]);
-                        }
-
-                        $cursor = $slotEnd;
-                    }
                 }
             }
         });
@@ -185,11 +171,14 @@ class SlotGenerationService
             return true;
         }
 
+        if ($exception->start_time === null || $exception->end_time === null) {
+            return false;
+        }
+
         $exceptionStart = CarbonImmutable::parse(
             $slotStart->toDateString().' '.$exception->start_time,
             $slotStart->getTimezone(),
         );
-
         $exceptionEnd = CarbonImmutable::parse(
             $slotStart->toDateString().' '.$exception->end_time,
             $slotStart->getTimezone(),

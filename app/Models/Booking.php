@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Concerns\HasPublicUlid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,6 +48,7 @@ class Booking extends Model
         return [
             'status' => BookingStatus::class,
             'source' => BookingSource::class,
+            'payment_status' => PaymentStatus::class,
             'confirmed_at' => 'datetime',
             'checked_in_at' => 'datetime',
             'started_at' => 'datetime',

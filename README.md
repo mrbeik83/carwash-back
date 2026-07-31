@@ -1,66 +1,100 @@
 # سامانه مدیریت و رزرو کارواش
 
-Backend اصلی پروژه با Laravel 12، پنل‌های Blade، API مخصوص Next.js، احراز هویت Sanctum و مدیریت نقش‌های هر کارواش با Spatie Permission Teams.
+Backend پروژه با Laravel 12، دو پنل مستقل Blade، API مخصوص Next.js، Sanctum و Spatie Permission Teams.
 
-## معماری
+## مسیرهای اصلی
 
 ```text
-Laravel
-├── /admin                         پنل مدیر کل
-├── /wash-panel/{carWash:slug}     پنل هر کارواش
-└── /api/v1                       API لندینگ Next.js
+/                              انتخاب نوع پنل
+/admin/login                   ورود مستقل مدیر اصلی
+/admin/dashboard               پنل مدیریت کل
+
+/carwash/login                 ورود مستقل مالک و کارکنان
+/carwash/select                انتخاب کارواش برای کاربران چندکارواشی
+/carwash/{carWash:slug}/dashboard
+                               پنل اختصاصی همان کارواش
+
+/api/v1                        API لندینگ Next.js
 ```
 
-تمام افراد در جدول `users` قرار دارند:
+ورود مدیر اصلی و ورود کارواش Controller، Route و View جدا دارند؛ اما هر دو از جدول `users` و guard استاندارد `web` استفاده می‌کنند. این ساختار از تکرار User و Role جلوگیری می‌کند.
 
-- مدیر کل: `users.is_super_admin = true`
-- مالک و کارکنان کارواش: عضویت در `car_wash_user` و Role تیمی Spatie با `car_wash_id`
-- مشتری: User عادی با ورود OTP
+## طراحی رابط
+
+رابط پنل‌ها بر اساس قالب فارسی آرینو بازطراحی شده است:
+
+- فونت Peyda با اعداد فارسی
+- رنگ اصلی نارنجی `#FF8229`
+- رنگ ثانویه `#272C48`
+- Sidebar واکنش‌گرا
+- Dark mode
+- صفحه ورود دو بخشی مشابه قالب
+- جدول‌ها، کارت‌ها، فرم‌ها و نمودارهای یکپارچه
+- Layout مستقل `admin` و `carwash`
+
+تنها Assetهای ضروری قالب به پروژه منتقل شده‌اند. فایل‌های Demo فروشگاهی و JavaScript نمایشی قالب وارد پروژه نشده‌اند.
 
 ## پیش‌نیازها
 
-- PHP 8.2 یا جدیدتر
+- PHP 8.2+
 - MySQL 8+
 - Composer
 - Node.js 20+
-- افزونه‌های معمول Laravel مانند `mbstring`, `pdo_mysql`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`
+- افزونه‌های PHP: `mbstring`, `pdo_mysql`, `openssl`, `tokenizer`, `xml`, `dom`, `xmlwriter`, `ctype`, `fileinfo`
 
 ## نصب
 
-```bash
+```powershell
 composer install
 npm install
-copy .env.example .env
+Copy-Item .env.example .env
 php artisan key:generate
 ```
 
-اطلاعات دیتابیس و مدیر کل را در `.env` تنظیم کنید، سپس:
+مقادیر دیتابیس و Super Admin را در `.env` تنظیم کنید:
 
-```bash
+```dotenv
+SUPER_ADMIN_NAME="مدیر کل سیستم"
+SUPER_ADMIN_MOBILE="98912..."
+SUPER_ADMIN_EMAIL="admin@example.com"
+SUPER_ADMIN_PASSWORD="رمز قوی"
+```
+
+سپس:
+
+```powershell
 php artisan optimize:clear
 php artisan migrate:fresh --seed
 npm run build
 php artisan serve
 ```
 
-اطلاعات ورود مدیر کل از این متغیرها خوانده می‌شود:
+> دستور `migrate:fresh` تمام داده‌های دیتابیس را حذف می‌کند و فقط در محیط توسعه مناسب است.
 
-```dotenv
-SUPER_ADMIN_MOBILE=
-SUPER_ADMIN_PASSWORD=
+## ورود
+
+### مدیر اصلی
+
+```text
+http://localhost:8000/admin/login
 ```
 
-## دستورات توسعه
+فقط کاربری وارد می‌شود که:
 
-```bash
-composer test
-php artisan route:list
-php artisan carwash:generate-slots --days=45
-php artisan schedule:list
-npm run dev
+```text
+users.is_super_admin = true
+users.status = active
 ```
 
-## نقش‌های کارواش
+### مالک و کارکنان کارواش
+
+```text
+http://localhost:8000/carwash/login
+```
+
+ورود با رمز عبور یا OTP ممکن است. کاربر باید حداقل یک عضویت فعال در یک کارواش فعال داشته باشد.
+
+## نقش‌ها
 
 - `carwash-owner`
 - `carwash-manager`
@@ -68,78 +102,47 @@ npm run dev
 - `carwash-operator`
 - `carwash-accountant`
 
-مدیر کل Role اسپاتی ندارد؛ دسترسی کامل او با ستون `is_super_admin` و `Gate::before` اعمال می‌شود. این تصمیم از مشکل `car_wash_id = null` در `model_has_roles` جلوگیری می‌کند.
+مدیر اصلی Role اسپاتی ندارد؛ دسترسی کامل او با `users.is_super_admin` و `Gate::before` اعمال می‌شود.
 
-## Cache، Session و Queue
-
-Migrationهای زیر داخل پروژه موجود است:
-
-- `cache`
-- `cache_locks`
-- `sessions`
-- `jobs`
-- `job_batches`
-- `failed_jobs`
-
-بنابراین مقادیر زیر بدون خطای نبودن جدول قابل استفاده‌اند:
-
-```dotenv
-CACHE_STORE=database
-SESSION_DRIVER=database
-QUEUE_CONNECTION=database
-```
-
-## API و Sanctum
-
-فایل `routes/api.php` در `bootstrap/app.php` ثبت شده است و مسیرها با پیشوند زیر در دسترس‌اند:
+## فایل‌های مهم رابط
 
 ```text
-/api/v1
+resources/views/layouts/admin.blade.php
+resources/views/layouts/carwash.blade.php
+resources/views/layouts/auth.blade.php
+
+resources/views/partials/admin/sidebar.blade.php
+resources/views/partials/carwash/sidebar.blade.php
+
+resources/css/app.css
+resources/js/app.js
+
+public/vendor/arino/
 ```
 
-برای Next.js در حالت Cookie-based:
+## بررسی خودکار
 
-```ts
-fetch(`${API_URL}/sanctum/csrf-cookie`, {
-  credentials: 'include',
-});
-
-fetch(`${API_URL}/api/v1/me`, {
-  credentials: 'include',
-  headers: { Accept: 'application/json' },
-});
-```
-
-## مستندات
-
-مستندات فنی در پوشه `docs` قرار دارند. گزارش اصلاحات بازبینی کامل پروژه:
-
-```text
-docs/07-CODE-REVIEW-FIXES.md
-```
-
-## CORS برای Next.js
-
-در `.env` دامنه‌های مجاز را تنظیم کنید:
-
-```dotenv
-FRONTEND_URL=http://localhost:3000
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-SANCTUM_STATEFUL_DOMAINS=localhost:3000,127.0.0.1:3000,localhost:8000,127.0.0.1:8000
-```
-
-در محیط Production، `SESSION_SECURE_COOKIE=true` و دامنه Session مشترک را تنظیم کنید.
-
-## بررسی کامل روی ویندوز
-
-دستور زیر مخرب است و همه جدول‌ها را حذف و از اول ایجاد می‌کند:
+در ویندوز:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\verify-fresh.ps1
 ```
 
-گزارش کامل بررسی:
+این اسکریپت مخرب است و دیتابیس را از نو می‌سازد.
+
+مستند کامل یکپارچه‌سازی قالب:
 
 ```text
-docs/08-FULL-AUDIT-REPORT.md
+docs/11-ARINO-THEME-INTEGRATION.md
 ```
+
+## نسخه فارسی پنل و زمان‌بندی هفتگی
+
+این نسخه شامل تقویم شمسی، رابط راست‌چین، برنامه هفتگی شنبه تا جمعه، اسلات‌های ۳۰/۶۰ دقیقه‌ای، ظرفیت مستقل هر اسلات، تقویم عملیاتی رزروها و قرارداد به‌روزشده API است.
+
+مستندات اصلی:
+
+- `docs/14-PERSIAN-UX-AND-WEEKLY-SCHEDULING.md`
+- `docs/15-FRONTEND-INTEGRATION-FA.md`
+- `docs/16-IMPLEMENTATION-AND-VALIDATION-FA.md`
+- `docs/openapi.yaml`

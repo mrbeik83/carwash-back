@@ -19,6 +19,11 @@ class CustomerController extends Controller
 
         $customers = User::query()
             ->whereIn('id', $customerIds)
+            ->withCount('vehicles')
+            ->withCount([
+                'bookings as car_wash_bookings_count' => fn ($query) => $query
+                    ->where('car_wash_id', $carWash->getKey()),
+            ])
             ->when($request->filled('q'), function ($q) use ($request): void {
                 $term = '%'.$request->string('q').'%';
                 $q->where(fn ($inner) => $inner

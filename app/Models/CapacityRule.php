@@ -14,6 +14,7 @@ class CapacityRule extends Model
         'end_time',
         'slot_duration_minutes',
         'capacity',
+        'slot_capacities',
         'valid_from',
         'valid_until',
         'is_active',
@@ -26,6 +27,7 @@ class CapacityRule extends Model
             'valid_from' => 'date',
             'valid_until' => 'date',
             'is_active' => 'boolean',
+            'slot_capacities' => 'array',
         ];
     }
 

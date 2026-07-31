@@ -1,0 +1,32 @@
+نتایج اعتبارسنجی پنل فارسی کارواش
+====================================================
+[OK] تبدیل 2026-07-31 به 1405/05/09
+[OK] تبدیل برگشتی 1405/05/09 به 2026-07-31
+[OK] تبدیل 2026-08-01 به 1405/05/10
+[OK] تبدیل برگشتی 1405/05/10 به 2026-08-01
+[OK] تبدیل 2025-03-20 به 1403/12/30
+[OK] تبدیل برگشتی 1403/12/30 به 2025-03-20
+[OK] تبدیل 2025-03-21 به 1404/01/01
+[OK] تبدیل برگشتی 1404/01/01 به 2025-03-21
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/dashboard.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/partials/navigation.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/settings/edit.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/schedule/index.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/payments/index.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/bookings/show.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/bookings/index.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/profile/edit.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/services/index.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/qr/index.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/reports/index.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/members/index.blade.php
+[OK] نبود ورودی تاریخ میلادی در resources/views/carwash/customers/index.blade.php
+[OK] کامپایل نحوی 47 فایل Blade
+[OK] وجود فایل app/Support/PersianDate.php
+[OK] وجود فایل app/Http/Requests/CarWashPanel/SaveWeeklyScheduleRequest.php
+[OK] وجود فایل app/Http/Resources/Api/V1/BookingResource.php
+[OK] وجود فایل database/migrations/2026_07_31_000100_add_slot_capacities_to_capacity_rules_table.php
+[OK] وجود فایل docs/15-FRONTEND-INTEGRATION-FA.md
+[OK] وجود فایل docs/openapi.yaml
+
+همه بررسی‌های استاتیک با موفقیت انجام شدند.

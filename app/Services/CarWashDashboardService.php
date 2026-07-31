@@ -9,10 +9,18 @@ class CarWashDashboardService
 {
     public function summary(CarWash $carWash): array
     {
-        $todayStart = now($carWash->timezone)->startOfDay()->setTimezone('UTC');
-        $todayEnd = now($carWash->timezone)->endOfDay()->setTimezone('UTC');
-
+        $timezone = $carWash->timezone ?: 'Asia/Tehran';
+        $todayStart = now($timezone)->startOfDay()->setTimezone('UTC');
+        $todayEnd = now($timezone)->endOfDay()->setTimezone('UTC');
         $base = $carWash->bookings();
+
+        $todaySlots = $carWash->bookingSlots()
+            ->whereBetween('starts_at', [$todayStart, $todayEnd])
+            ->orderBy('starts_at')
+            ->get();
+
+        $totalCapacity = (int) $todaySlots->sum('capacity');
+        $reservedCapacity = (int) $todaySlots->sum('reserved_count');
 
         return [
             'today_bookings' => (clone $base)->whereBetween('created_at', [$todayStart, $todayEnd])->count(),
@@ -24,10 +32,22 @@ class CarWashDashboardService
                 ->where('status', 'completed')
                 ->whereBetween('completed_at', [$todayStart, $todayEnd])
                 ->sum('payable_amount'),
+            'today_slots' => $todaySlots,
+            'open_slots' => $todaySlots->where('status', 'open')->count(),
+            'full_slots' => $todaySlots->where('status', 'full')->count(),
+            'total_capacity' => $totalCapacity,
+            'reserved_capacity' => $reservedCapacity,
+            'fill_rate' => $totalCapacity > 0 ? round(($reservedCapacity / $totalCapacity) * 100) : 0,
+            'next_available_slot' => $carWash->bookingSlots()
+                ->where('starts_at', '>=', now())
+                ->where('status', 'open')
+                ->whereColumn('reserved_count', '<', 'capacity')
+                ->orderBy('starts_at')
+                ->first(),
             'next_bookings' => (clone $base)
                 ->with(['slot', 'items'])
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->whereHas('slot', fn ($q) => $q->where('starts_at', '>=', now()))
+                ->whereIn('status', ['pending', 'confirmed', 'checked_in'])
+                ->whereHas('slot', fn ($q) => $q->where('starts_at', '>=', now()->subHour()))
                 ->orderBy(
                     DB::table('booking_slots')
                         ->select('starts_at')

@@ -1,21 +1,39 @@
-FINAL STATIC VALIDATION
-=======================
-PHP syntax: PASS (all application, configuration, migration, seeder, route and test PHP files)
-Blade compile + PHP lint: PASS (30 Blade templates)
-Registered routes: PASS (66 routes)
-API routes registered: PASS
-Route controller classes/methods: PASS
-Blade named-route references: PASS
-Internal App/Database/Tests imports: PASS
-Permission string declarations: PASS
-Git conflict markers: PASS (none found)
-Legacy RoleName::SUPER_ADMIN references: PASS (none found)
-Spatie teams runtime config: teams=true, team_foreign_key=car_wash_id
-Sanctum runtime guard: web
-CORS credentials: enabled for api/* and sanctum/csrf-cookie
+ARINO THEME INTEGRATION VALIDATION
+Generated: 2026-07-29T22:25:55
 
-ENVIRONMENT-LIMITED CHECKS
-==========================
-MySQL migrations/seed and PHPUnit could not be executed in the inspection container because it lacks PDO drivers, mbstring, DOM and XMLWriter.
-Vite build could not be executed because the inspection environment's internal npm registry did not contain @tailwindcss/vite.
-Run scripts/verify-fresh.ps1 on the Windows development machine for the destructive end-to-end check.
+PHP syntax:
+- 151 PHP files checked
+- Result: PASS
+
+Blade:
+- 45 Blade views compiled with Laravel BladeCompiler
+- Result: PASS
+
+Routes:
+- 78 routes loaded
+- 77 named routes
+- All 101 route() references in Blade matched registered route names
+- Result: PASS
+
+Controllers:
+- 68 controller route actions checked with Reflection
+- All controller classes and methods exist
+- Result: PASS
+
+Views:
+- 28 controller view references checked
+- All referenced Blade files exist
+- Result: PASS
+
+Theme integration:
+- Separate admin login: /admin/login
+- Separate car wash login: /carwash/login
+- Separate admin layout/sidebar
+- Separate car wash layout/sidebar
+- Arino Peyda fonts and required images copied
+- Demo theme JavaScript was not used
+
+Vite build:
+- Not executed in the container because the uploaded node_modules only contained
+  Windows Rollup/Tailwind native binaries and the internal npm mirror lacked one package.
+- Run `npm install` and `npm run build` on the target Windows system.

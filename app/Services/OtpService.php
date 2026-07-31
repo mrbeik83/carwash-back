@@ -33,7 +33,11 @@ class OtpService
             ->whereNull('consumed_at')
             ->update(['consumed_at' => now()]);
 
-        $code = (string) random_int(100000, 999999);
+        if(env('APP_ENV') == 'local'){
+            $code = '123456'; 
+        }else{
+            $code = (string) random_int(100000, 999999);
+        }
 
         OtpCode::query()->create([
             'mobile' => $mobile,

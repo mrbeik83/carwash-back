@@ -2,9 +2,9 @@
 
 ## اجزای اصلی
 
-1. Laravel 13 / PHP 8.3+ به‌عنوان Backend واحد
+1. Laravel 12 / PHP 8.2+ به‌عنوان Backend واحد
 2. پنل مدیریت کل با Blade در `/admin`
-3. پنل هر کارواش با Blade در `/wash-panel/{carWash:slug}`
+3. پنل هر کارواش با Blade در `/carwash/{carWash:slug}/dashboard`
 4. لندینگ رزرو Next.js روی دامنه جدا و اتصال با REST API
 5. Sanctum برای احراز هویت SPA با Cookie
 6. Spatie Permission v6 با Teams و `car_wash_id`

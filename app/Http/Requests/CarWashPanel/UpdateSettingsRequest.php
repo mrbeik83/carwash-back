@@ -15,7 +15,7 @@ class UpdateSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'booking_interval_minutes' => ['required', Rule::in([15, 30, 45, 60, 90, 120])],
+            'booking_interval_minutes' => ['required', Rule::in([30, 60])],
             'minimum_booking_notice_minutes' => ['required', 'integer', 'min:0', 'max:10080'],
             'maximum_booking_days_ahead' => ['required', 'integer', 'min:1', 'max:365'],
             'cancellation_deadline_minutes' => ['required', 'integer', 'min:0', 'max:10080'],

@@ -1,14 +1,20 @@
-@extends('layouts.panel')
+@extends('layouts.admin')
 @section('title', 'ایجاد کارواش')
-@section('navigation')
-<a class="block rounded-lg p-2 hover:bg-white/10" href="{{ route('admin.dashboard') }}">داشبورد</a>
-<a class="block rounded-lg p-2 hover:bg-white/10" href="{{ route('admin.car-washes.index') }}">کارواش‌ها</a>
-@endsection
+@section('page-title', 'ایجاد کارواش')
 @section('content')
-<h1 class="mb-6 text-2xl font-bold">ایجاد کارواش</h1>
-<form method="POST" action="{{ route('admin.car-washes.store') }}" class="rounded-2xl bg-white p-6 shadow-sm">
+<div class="mb-6 flex items-center justify-between gap-3">
+    <div><h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">ثبت کارواش جدید</h1><p class="mt-1 text-sm text-gray-500">اطلاعات مرکز و مالک اولیه را وارد کنید.</p></div>
+    <a href="{{ route('admin.car-washes.index') }}" class="btn-secondary">بازگشت</a>
+</div>
+<form method="POST" action="{{ route('admin.car-washes.store') }}" class="panel-card">
     @csrf
-    @include('admin.car-washes._form')
-    <button class="mt-6 rounded-xl bg-slate-900 px-5 py-3 text-white">ایجاد کارواش</button>
+    <div class="panel-card-header"><h2 class="font-bold">اطلاعات کارواش</h2></div>
+    <div class="panel-card-body">
+        @include('admin.car-washes._form')
+        <div class="mt-6 flex justify-end gap-3">
+            <a href="{{ route('admin.car-washes.index') }}" class="btn-secondary">انصراف</a>
+            <button class="btn-primary">ایجاد کارواش</button>
+        </div>
+    </div>
 </form>
 @endsection

@@ -10,6 +10,18 @@ enum RoleName: string
     case CAR_WASH_OPERATOR = 'carwash-operator';
     case CAR_WASH_ACCOUNTANT = 'carwash-accountant';
 
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::CAR_WASH_OWNER => 'مالک کارواش',
+            self::CAR_WASH_MANAGER => 'مدیر کارواش',
+            self::CAR_WASH_RECEPTIONIST => 'پذیرش',
+            self::CAR_WASH_OPERATOR => 'اپراتور شست‌وشو',
+            self::CAR_WASH_ACCOUNTANT => 'حسابدار',
+        };
+    }
+
     public function isCarWashRole(): bool
     {
         return true;

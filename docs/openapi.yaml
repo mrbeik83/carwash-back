@@ -1,114 +1,944 @@
 openapi: 3.1.0
 info:
   title: Carwash Booking API
-  version: 1.0.0
+  version: 1.1.0
+  description: |
+    API عمومی و حساب کاربری سامانه رزرو کارواش. احراز هویت SPA با Laravel Sanctum و کوکی session انجام می‌شود.
+    تاریخ‌های query میلادی با قالب YYYY-MM-DD هستند؛ پاسخ ظرفیت و رزرو فیلدهای آماده نمایش شمسی نیز دارد.
 servers:
-  - url: https://api.example.com/api/v1
+  - url: http://localhost:8000/api/v1
+    description: Local
+  - url: https://api.example.ir/api/v1
+    description: Production example
+tags:
+  - name: Auth
+  - name: Public Car Wash
+  - name: Account
+  - name: Vehicles
+  - name: Bookings
 paths:
   /auth/request-otp:
     post:
-      summary: Request login OTP
+      tags: [Auth]
+      summary: درخواست رمز یک‌بارمصرف
+      operationId: requestOtp
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [mobile]
-              properties:
-                mobile: { type: string, example: "989121234567" }
-                purpose: { type: string, enum: [login, register, verify_mobile], default: login }
+              $ref: '#/components/schemas/RequestOtpInput'
       responses:
-        '200': { description: OTP requested }
-        '422': { description: Validation error }
-        '429': { description: Rate limited }
+        '200':
+          description: کد تأیید ارسال شد
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /auth/verify-otp:
     post:
-      summary: Verify OTP and start Sanctum session
+      tags: [Auth]
+      summary: تأیید رمز و ایجاد session
+      operationId: verifyOtp
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [mobile, code]
-              properties:
-                mobile: { type: string }
-                code: { type: string, minLength: 6, maxLength: 6 }
-                full_name: { type: string }
+              $ref: '#/components/schemas/VerifyOtpInput'
       responses:
-        '200': { description: Authenticated }
+        '200':
+          description: ورود موفق
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AuthUser'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: خروج از حساب
+      operationId: logout
+      security:
+        - sanctumCookie: []
+      responses:
+        '200':
+          description: خروج موفق
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
   /car-washes/{slug}:
     get:
-      summary: Public car wash profile and services
+      tags: [Public Car Wash]
+      summary: اطلاعات عمومی، خدمات و انواع خودروی کارواش
+      operationId: getPublicCarWash
       parameters:
-        - in: path
-          name: slug
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/CarWashSlug'
       responses:
-        '200': { description: Car wash }
-        '404': { description: Not found }
+        '200':
+          description: اطلاعات کارواش
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PublicCarWash'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /car-washes/{slug}/availability:
     get:
-      summary: Available booking slots
+      tags: [Public Car Wash]
+      summary: اسلات‌های باز و دارای ظرفیت
+      operationId: getAvailability
       parameters:
-        - in: path
-          name: slug
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/CarWashSlug'
         - in: query
           name: from
           required: true
-          schema: { type: string, format: date }
+          description: تاریخ میلادی شروع
+          schema:
+            type: string
+            format: date
+          example: '2026-08-01'
         - in: query
           name: to
           required: true
-          schema: { type: string, format: date }
+          description: تاریخ میلادی پایان
+          schema:
+            type: string
+            format: date
+          example: '2026-08-07'
       responses:
-        '200': { description: Available slots }
+        '200':
+          description: فهرست ظرفیت‌های قابل رزرو
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /me:
     get:
-      security: [{ sanctumCookie: [] }]
-      summary: Current customer
+      tags: [Account]
+      summary: اطلاعات کاربر جاری
+      operationId: getMe
+      security:
+        - sanctumCookie: []
       responses:
-        '200': { description: User }
-        '401': { description: Unauthenticated }
+        '200':
+          description: کاربر جاری
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MeUser'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
   /vehicles:
     get:
-      security: [{ sanctumCookie: [] }]
-      summary: Customer vehicles
-      responses: { '200': { description: Vehicle list } }
-    post:
-      security: [{ sanctumCookie: [] }]
-      summary: Add vehicle
-      responses: { '201': { description: Created } }
-  /bookings:
-    get:
-      security: [{ sanctumCookie: [] }]
-      summary: Customer booking history
-      responses: { '200': { description: Paginated bookings } }
-    post:
-      security: [{ sanctumCookie: [] }]
-      summary: Create booking
+      tags: [Vehicles]
+      summary: خودروهای کاربر
+      operationId: listVehicles
+      security:
+        - sanctumCookie: []
       responses:
-        '201': { description: Created }
-        '422': { description: Slot full or invalid service }
-  /bookings/{publicId}/cancel:
+        '200':
+          description: فهرست خودروها
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserVehicle'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
     post:
-      security: [{ sanctumCookie: [] }]
-      summary: Cancel own booking within deadline
+      tags: [Vehicles]
+      summary: افزودن خودرو
+      operationId: createVehicle
+      security:
+        - sanctumCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleInput'
+      responses:
+        '201':
+          description: خودرو ایجاد شد
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserVehicle'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /vehicles/{vehicleId}:
+    delete:
+      tags: [Vehicles]
+      summary: حذف خودروی متعلق به کاربر
+      operationId: deleteVehicle
+      security:
+        - sanctumCookie: []
       parameters:
         - in: path
-          name: publicId
+          name: vehicleId
           required: true
-          schema: { type: string }
+          schema:
+            type: integer
+            minimum: 1
       responses:
-        '200': { description: Cancelled }
-        '422': { description: Cancellation deadline passed }
+        '204':
+          description: حذف شد
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /bookings:
+    get:
+      tags: [Bookings]
+      summary: رزروهای کاربر به‌صورت صفحه‌بندی‌شده
+      operationId: listBookings
+      security:
+        - sanctumCookie: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: فهرست رزروها
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      tags: [Bookings]
+      summary: ثبت رزرو
+      operationId: createBooking
+      security:
+        - sanctumCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingInput'
+      responses:
+        '201':
+          description: رزرو ایجاد شد
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /bookings/{publicId}:
+    get:
+      tags: [Bookings]
+      summary: جزئیات رزرو متعلق به کاربر
+      operationId: getBooking
+      security:
+        - sanctumCookie: []
+      parameters:
+        - $ref: '#/components/parameters/BookingPublicId'
+      responses:
+        '200':
+          description: جزئیات رزرو
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /bookings/{publicId}/cancel:
+    post:
+      tags: [Bookings]
+      summary: لغو رزرو متعلق به کاربر
+      operationId: cancelBooking
+      security:
+        - sanctumCookie: []
+      parameters:
+        - $ref: '#/components/parameters/BookingPublicId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: [string, 'null']
+                  maxLength: 1000
+              example:
+                reason: تغییر برنامه
+      responses:
+        '200':
+          description: رزرو لغو شد
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
 components:
   securitySchemes:
     sanctumCookie:
       type: apiKey
       in: cookie
       name: laravel_session
+      description: |
+        ابتدا GET /sanctum/csrf-cookie روی origin بک‌اند فراخوانی شود و همه درخواست‌ها با credentials ارسال شوند.
+  parameters:
+    CarWashSlug:
+      in: path
+      name: slug
+      required: true
+      schema:
+        type: string
+        minLength: 1
+      example: carwash-shayan
+    BookingPublicId:
+      in: path
+      name: publicId
+      required: true
+      schema:
+        type: string
+      example: 01K1ABCDEF0123456789XYZABC
+  responses:
+    ValidationError:
+      description: خطای اعتبارسنجی یا قانون کسب‌وکار
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+    Unauthenticated:
+      description: کاربر وارد نشده یا session منقضی شده است
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Unauthenticated.
+    NotFound:
+      description: منبع یافت نشد یا متعلق به کاربر نیست
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimited:
+      description: تعداد درخواست بیش از حد مجاز است
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+    ValidationError:
+      type: object
+      required: [message, errors]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      example:
+        message: اطلاعات واردشده معتبر نیست.
+        errors:
+          booking_slot_id:
+            - ظرفیت این بازه تکمیل شده است.
+    OtpPurpose:
+      type: string
+      enum: [login, register, verify_mobile]
+    RequestOtpInput:
+      type: object
+      required: [mobile]
+      properties:
+        mobile:
+          type: string
+          maxLength: 20
+          example: '09121234567'
+        purpose:
+          $ref: '#/components/schemas/OtpPurpose'
+      example:
+        mobile: '09121234567'
+        purpose: login
+    VerifyOtpInput:
+      type: object
+      required: [mobile, code]
+      properties:
+        mobile:
+          type: string
+          maxLength: 20
+        code:
+          type: string
+          pattern: '^\d{6}$'
+        purpose:
+          $ref: '#/components/schemas/OtpPurpose'
+        full_name:
+          type: [string, 'null']
+          maxLength: 150
+      example:
+        mobile: '09121234567'
+        code: '123456'
+        purpose: login
+        full_name: علی رضایی
+    AuthUser:
+      type: object
+      required: [id, full_name, mobile]
+      properties:
+        id:
+          type: string
+        full_name:
+          type: [string, 'null']
+        mobile:
+          type: string
+    MeUser:
+      type: object
+      required: [id, full_name, mobile, email, mobile_verified_at]
+      properties:
+        id:
+          type: string
+        full_name:
+          type: [string, 'null']
+        mobile:
+          type: [string, 'null']
+        email:
+          type: [string, 'null']
+          format: email
+        mobile_verified_at:
+          type: [string, 'null']
+          format: date-time
+    VehicleType:
+      type: object
+      required: [id, name, slug, size_class]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        size_class:
+          type: [string, 'null']
+    VehiclePrice:
+      type: object
+      required: [vehicle_type_id, vehicle_type, price, duration_minutes]
+      properties:
+        vehicle_type_id:
+          type: integer
+        vehicle_type:
+          oneOf:
+            - $ref: '#/components/schemas/VehicleType'
+            - type: 'null'
+        price:
+          type: integer
+          minimum: 0
+        duration_minutes:
+          type: integer
+          minimum: 1
+    Service:
+      type: object
+      required: [id, name, slug, description, base_price, default_duration_minutes, vehicle_prices]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: [string, 'null']
+        base_price:
+          type: integer
+          minimum: 0
+        default_duration_minutes:
+          type: integer
+          minimum: 1
+        vehicle_prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehiclePrice'
+    BookingPolicy:
+      type: object
+      required: [minimum_notice_minutes, maximum_days_ahead, cancellation_deadline_minutes, auto_confirm, online_payment_required]
+      properties:
+        minimum_notice_minutes:
+          type: integer
+          minimum: 0
+        maximum_days_ahead:
+          type: integer
+          minimum: 1
+        cancellation_deadline_minutes:
+          type: integer
+          minimum: 0
+        auto_confirm:
+          type: boolean
+        online_payment_required:
+          type: boolean
+    PublicCarWash:
+      type: object
+      required: [id, name, slug, phone, mobile, city, province, address, description, logo_url, cover_image_url, location, timezone, currency_code, booking_policy, vehicle_types, services]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        phone:
+          type: [string, 'null']
+        mobile:
+          type: [string, 'null']
+        city:
+          type: [string, 'null']
+        province:
+          type: [string, 'null']
+        address:
+          type: [string, 'null']
+        description:
+          type: [string, 'null']
+        logo_url:
+          type: [string, 'null']
+          format: uri
+        cover_image_url:
+          type: [string, 'null']
+          format: uri
+        location:
+          type: object
+          required: [latitude, longitude]
+          properties:
+            latitude:
+              type: [number, 'null']
+            longitude:
+              type: [number, 'null']
+        timezone:
+          type: string
+          example: Asia/Tehran
+        currency_code:
+          type: string
+          example: IRT
+        booking_policy:
+          $ref: '#/components/schemas/BookingPolicy'
+        vehicle_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleType'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
+    AvailabilitySlot:
+      type: object
+      required: [id, date, persian_date, persian_date_label, weekday, starts_at, ends_at, local_start_time, local_end_time, capacity, reserved_count, remaining_capacity, status]
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        persian_date:
+          type: string
+          example: 1405/05/10
+        persian_date_label:
+          type: string
+          example: شنبه ۱۰ مرداد ۱۴۰۵
+        weekday:
+          type: string
+          example: شنبه
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        local_start_time:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+        local_end_time:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+        capacity:
+          type: integer
+          minimum: 1
+        reserved_count:
+          type: integer
+          minimum: 0
+        remaining_capacity:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          const: open
+    AvailabilityResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilitySlot'
+        meta:
+          type: object
+          required: [timezone, from, to, persian_from, persian_to]
+          properties:
+            timezone:
+              type: string
+            from:
+              type: string
+              format: date
+            to:
+              type: string
+              format: date
+            persian_from:
+              type: string
+            persian_to:
+              type: string
+    UserVehicle:
+      type: object
+      required: [id, vehicle_type_id, vehicle_type, plate_number, brand, model, color, production_year, nickname, is_default, created_at]
+      properties:
+        id:
+          type: integer
+        vehicle_type_id:
+          type: integer
+        vehicle_type:
+          oneOf:
+            - $ref: '#/components/schemas/VehicleType'
+            - type: 'null'
+        plate_number:
+          type: [string, 'null']
+        brand:
+          type: [string, 'null']
+        model:
+          type: [string, 'null']
+        color:
+          type: [string, 'null']
+        production_year:
+          type: [integer, 'null']
+        nickname:
+          type: [string, 'null']
+        is_default:
+          type: boolean
+        created_at:
+          type: [string, 'null']
+          format: date-time
+    CreateVehicleInput:
+      type: object
+      required: [vehicle_type_id, is_default]
+      properties:
+        vehicle_type_id:
+          type: integer
+        plate_number:
+          type: [string, 'null']
+          maxLength: 30
+        brand:
+          type: [string, 'null']
+          maxLength: 100
+        model:
+          type: [string, 'null']
+          maxLength: 100
+        color:
+          type: [string, 'null']
+          maxLength: 50
+        production_year:
+          type: [integer, 'null']
+          minimum: 1300
+          maximum: 2200
+        nickname:
+          type: [string, 'null']
+          maxLength: 100
+        is_default:
+          type: boolean
+    LabelValue:
+      type: object
+      required: [value, label]
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+    BookingSlotSummary:
+      type: object
+      required: [id, starts_at, ends_at, date, persian_date, persian_date_label, weekday, local_start_time, local_end_time]
+      properties:
+        id:
+          type: integer
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        date:
+          type: string
+          format: date
+        persian_date:
+          type: string
+        persian_date_label:
+          type: string
+        weekday:
+          type: string
+        local_start_time:
+          type: string
+        local_end_time:
+          type: string
+    BookingItem:
+      type: object
+      required: [service_id, name, quantity, unit_price, duration_minutes, discount_amount, total_amount]
+      properties:
+        service_id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+        unit_price:
+          type: integer
+        duration_minutes:
+          type: integer
+        discount_amount:
+          type: integer
+        total_amount:
+          type: integer
+    Booking:
+      type: object
+      required: [id, tracking_code, status, payment_status, source, customer, vehicle, amounts, customer_note, car_wash, slot, items, created_at, updated_at]
+      properties:
+        id:
+          type: string
+        tracking_code:
+          type: string
+        status:
+          $ref: '#/components/schemas/LabelValue'
+        payment_status:
+          $ref: '#/components/schemas/LabelValue'
+        source:
+          $ref: '#/components/schemas/LabelValue'
+        customer:
+          type: object
+          required: [name, mobile]
+          properties:
+            name:
+              type: string
+            mobile:
+              type: string
+        vehicle:
+          type: object
+          required: [id, plate, type]
+          properties:
+            id:
+              type: [integer, 'null']
+            plate:
+              type: [string, 'null']
+            type:
+              type: [string, 'null']
+        amounts:
+          type: object
+          required: [subtotal, discount, payable, currency_code]
+          properties:
+            subtotal:
+              type: integer
+            discount:
+              type: integer
+            payable:
+              type: integer
+            currency_code:
+              type: string
+        customer_note:
+          type: [string, 'null']
+        car_wash:
+          type: [object, 'null']
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            slug:
+              type: string
+            timezone:
+              type: string
+            address:
+              type: [string, 'null']
+            phone:
+              type: [string, 'null']
+            mobile:
+              type: [string, 'null']
+        slot:
+          oneOf:
+            - $ref: '#/components/schemas/BookingSlotSummary'
+            - type: 'null'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingItem'
+        payments:
+          type: array
+          items:
+            type: object
+        created_at:
+          type: [string, 'null']
+          format: date-time
+        updated_at:
+          type: [string, 'null']
+          format: date-time
+    CreateBookingInput:
+      type: object
+      required: [booking_slot_id, customer_name, customer_mobile, service_ids]
+      properties:
+        booking_slot_id:
+          type: integer
+        vehicle_id:
+          type: [integer, 'null']
+        vehicle_type_id:
+          type: [integer, 'null']
+          description: وقتی vehicle_id ارسال نشده اجباری است
+        vehicle_plate:
+          type: [string, 'null']
+          maxLength: 30
+        customer_name:
+          type: string
+          maxLength: 150
+        customer_mobile:
+          type: string
+          maxLength: 20
+        customer_note:
+          type: [string, 'null']
+          maxLength: 1000
+        qr_token:
+          type: [string, 'null']
+          maxLength: 64
+        service_ids:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: integer
+      example:
+        booking_slot_id: 215
+        vehicle_id: 8
+        customer_name: علی رضایی
+        customer_mobile: '09121234567'
+        customer_note: لطفاً داخل خودرو هم نظافت شود.
+        service_ids: [3, 5]
+    PaginationLink:
+      type: object
+      required: [url, label, active]
+      properties:
+        url:
+          type: [string, 'null']
+        label:
+          type: string
+        active:
+          type: boolean
+    PaginatedBookings:
+      type: object
+      required: [data, links, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+        links:
+          type: object
+          properties:
+            first:
+              type: [string, 'null']
+            last:
+              type: [string, 'null']
+            prev:
+              type: [string, 'null']
+            next:
+              type: [string, 'null']
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+            from:
+              type: [integer, 'null']
+            last_page:
+              type: integer
+            links:
+              type: array
+              items:
+                $ref: '#/components/schemas/PaginationLink'
+            path:
+              type: string
+            per_page:
+              type: integer
+            to:
+              type: [integer, 'null']
+            total:
+              type: integer

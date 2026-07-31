@@ -12,9 +12,10 @@ use App\Http\Controllers\CarWashPanel\ReportController;
 use App\Http\Controllers\CarWashPanel\ScheduleController;
 use App\Http\Controllers\CarWashPanel\ServiceController;
 use App\Http\Controllers\CarWashPanel\SettingsController;
+use App\Models\CarWash;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('wash-panel/{carWash:slug}')
+Route::prefix('carwash/{carWash:slug}')
     ->name('carwash.')
     ->middleware([
         'auth',
@@ -24,7 +25,9 @@ Route::prefix('wash-panel/{carWash:slug}')
     ])
     ->scopeBindings()
     ->group(function (): void {
-        Route::get('/', DashboardController::class)
+        Route::get('/', fn (CarWash $carWash) => redirect()->route('carwash.dashboard', $carWash))->name('root');
+
+        Route::get('/dashboard', DashboardController::class)
             ->middleware('can:'.PermissionName::CAR_WASH_DASHBOARD_VIEW->value)
             ->name('dashboard');
 
@@ -80,6 +83,10 @@ Route::prefix('wash-panel/{carWash:slug}')
             ->middleware('can:'.PermissionName::CAR_WASH_SCHEDULE_VIEW->value)
             ->name('schedule.index');
 
+        Route::post('/schedule/weekly', [ScheduleController::class, 'saveWeekly'])
+            ->middleware('can:'.PermissionName::CAR_WASH_SCHEDULE_MANAGE->value)
+            ->name('schedule.weekly.save');
+
         Route::post('/schedule/rules', [ScheduleController::class, 'storeRule'])
             ->middleware('can:'.PermissionName::CAR_WASH_SCHEDULE_MANAGE->value)
             ->name('schedule.rules.store');
@@ -95,6 +102,10 @@ Route::prefix('wash-panel/{carWash:slug}')
         Route::delete('/schedule/exceptions/{scheduleException}', [ScheduleController::class, 'destroyException'])
             ->middleware('can:'.PermissionName::CAR_WASH_SCHEDULE_MANAGE->value)
             ->name('schedule.exceptions.destroy');
+
+        Route::put('/schedule/slots/{bookingSlot}', [ScheduleController::class, 'updateSlot'])
+            ->middleware('can:'.PermissionName::CAR_WASH_SCHEDULE_MANAGE->value)
+            ->name('schedule.slots.update');
 
         Route::post('/schedule/regenerate', [ScheduleController::class, 'regenerate'])
             ->middleware('can:'.PermissionName::CAR_WASH_SLOTS_REGENERATE->value)

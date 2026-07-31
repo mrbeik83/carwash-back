@@ -1,23 +1,602 @@
 @import 'tailwindcss';
 
+/*
+ |--------------------------------------------------------------------------
+ | Persian typography
+ |--------------------------------------------------------------------------
+ | Required public files (not bundled in resources.zip):
+ | public/fonts/iranyekanx/IRANYekanXVFaNumVF.woff2
+ | public/fonts/iranyekanx/IRANYekanXVF.woff2
+ */
+@font-face {
+    font-family: "IRANYekanXFaNum";
+    src: url("/fonts/iranyekanx/IRANYekanXVFaNumVF.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "IRANYekanX";
+    src: url("/fonts/iranyekanx/IRANYekanXVF.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../views/**/*.blade.php';
 @source '../js/**/*.js';
 
-html {
-    font-family: Tahoma, Arial, sans-serif;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: "IRANYekanXFaNum", Tahoma, Arial, ui-sans-serif, system-ui, sans-serif;
+
+    --color-primary: #ff8229;
+    --color-primary-50: #fff7ed;
+    --color-primary-100: #ffedd5;
+    --color-primary-200: #fed7aa;
+    --color-primary-300: #fdba74;
+    --color-primary-400: #fb923c;
+    --color-primary-500: #ff8229;
+    --color-primary-600: #ea580c;
+    --color-primary-700: #c2410c;
+    --color-primary-800: #9a3412;
+    --color-primary-900: #7c2d12;
+    --color-primary-950: #431407;
+
+    --color-secondary: #272c48;
+    --color-secondary-50: #f4f5f9;
+    --color-secondary-100: #e8eaf1;
+    --color-secondary-200: #cdd1e0;
+    --color-secondary-300: #a8aec8;
+    --color-secondary-400: #7d85ab;
+    --color-secondary-500: #5c648f;
+    --color-secondary-600: #474e74;
+    --color-secondary-700: #383e5d;
+    --color-secondary-800: #272c48;
+    --color-secondary-900: #1d2035;
+    --color-secondary-950: #10121e;
 }
 
-button,
-a,
-input,
-select,
-textarea {
-    transition: opacity 150ms ease, background-color 150ms ease, border-color 150ms ease;
+@layer base {
+    :root {
+        color-scheme: light;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    :root.dark {
+        color-scheme: dark;
+    }
+
+    html {
+        min-width: 320px;
+        font-family: var(--font-sans);
+        scroll-behavior: smooth;
+    }
+
+    body {
+        min-height: 100vh;
+        font-family: var(--font-sans);
+        line-height: 1.75;
+        background-image:
+            radial-gradient(circle at 90% 0%, rgb(255 130 41 / .08), transparent 26rem),
+            radial-gradient(circle at 10% 100%, rgb(39 44 72 / .06), transparent 28rem);
+        background-attachment: fixed;
+        @apply bg-gray-50 text-gray-900 antialiased dark:bg-gray-950 dark:text-gray-100;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        line-height: 1.5;
+    }
+
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        font: inherit;
+        -webkit-tap-highlight-color: transparent;
+        @apply transition-colors duration-150;
+    }
+
+    button,
+    [role="button"],
+    select,
+    summary {
+        touch-action: manipulation;
+    }
+
+    input,
+    textarea {
+        unicode-bidi: plaintext;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+        accent-color: var(--color-primary);
+    }
+
+    input[type="time"],
+    input[type="number"],
+    input[inputmode="numeric"],
+    input[inputmode="decimal"],
+    .numeric-value,
+    .time-value,
+    .money-value {
+        font-variant-numeric: tabular-nums;
+    }
+
+    input[type="time"],
+    input[type="number"] {
+        direction: ltr;
+        text-align: right;
+    }
+
+    /* Technical values should remain predictable and copyable. */
+    [dir="ltr"],
+    .font-latin,
+    input[type="email"],
+    input[type="url"],
+    input[type="tel"],
+    input[type="password"],
+    code,
+    kbd,
+    samp {
+        font-family: "IRANYekanX", Arial, ui-sans-serif, system-ui, sans-serif;
+        font-variant-numeric: tabular-nums;
+        unicode-bidi: isolate;
+    }
+
+    [dir="ltr"] {
+        text-align: left;
+    }
+
+    ::placeholder {
+        opacity: 1;
+    }
+
+    ::selection {
+        background: rgb(255 130 41 / .22);
+        color: inherit;
+    }
+
+    :focus-visible {
+        outline: 3px solid rgb(255 130 41 / .28);
+        outline-offset: 2px;
+    }
+
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    textarea:disabled {
+        @apply cursor-not-allowed opacity-60;
+    }
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+        -webkit-text-fill-color: currentColor;
+        transition: background-color 9999s ease-out 0s;
+    }
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(156 163 175 / .75) transparent;
+    }
+
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background: rgb(156 163 175 / .65);
+        background-clip: padding-box;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background: rgb(107 114 128 / .8);
+        background-clip: padding-box;
+    }
 }
 
-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
+@layer components {
+    .skip-link {
+        @apply fixed right-4 top-3 z-[200] -translate-y-24 rounded-xl bg-secondary px-4 py-2 text-sm font-bold text-white shadow-xl focus:translate-y-0;
+    }
+
+    .panel-card {
+        @apply rounded-2xl border border-gray-200 bg-white shadow-sm transition duration-200 dark:border-gray-700 dark:bg-gray-800;
+    }
+
+    .panel-card:hover {
+        @apply border-gray-300 shadow-md dark:border-gray-600;
+    }
+
+    .panel-card:focus-within {
+        @apply border-primary/40 ring-2 ring-primary/10;
+    }
+
+    .panel-card-header {
+        @apply flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-4 dark:border-gray-700 sm:px-5;
+    }
+
+    .panel-card-body {
+        @apply p-4 sm:p-5;
+    }
+
+    .panel-card-soft {
+        @apply rounded-2xl border border-white/80 bg-white/85 shadow-sm backdrop-blur transition duration-200 dark:border-gray-700/80 dark:bg-gray-800/85;
+    }
+
+    .panel-page-heading {
+        @apply text-2xl font-extrabold tracking-tight text-gray-950 dark:text-white sm:text-3xl;
+    }
+
+    .panel-page-description {
+        @apply mt-1.5 max-w-3xl text-sm leading-7 text-gray-500 dark:text-gray-400;
+    }
+
+    .form-label {
+        @apply mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300;
+    }
+
+    .form-hint {
+        @apply mt-1.5 block text-xs leading-6 text-gray-500 dark:text-gray-400;
+    }
+
+    .form-error {
+        @apply mt-1.5 block text-xs font-medium text-red-600 dark:text-red-400;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        @apply block w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-xs outline-none placeholder:text-gray-400 hover:border-gray-400 focus:border-primary focus:ring-4 focus:ring-primary/10 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:hover:border-gray-500;
+    }
+
+    .form-control[aria-invalid="true"],
+    .form-select[aria-invalid="true"] {
+        @apply border-red-500 focus:border-red-500 focus:ring-red-500/10;
+    }
+
+    .form-control:disabled,
+    .form-control[readonly],
+    .form-select:disabled {
+        @apply bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400;
+    }
+
+    .form-select {
+        appearance: none;
+        padding-left: 2.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+        background-position: left .85rem center;
+        background-repeat: no-repeat;
+        background-size: 1.15rem 1.15rem;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .btn-success {
+        min-height: 42px;
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition duration-150 focus:outline-none focus:ring-4 active:translate-y-px disabled:translate-y-0;
+    }
+
+    .btn-primary {
+        @apply bg-primary text-white hover:bg-primary-600 focus:ring-primary/20;
+    }
+
+    .btn-secondary {
+        @apply border border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50 focus:ring-gray-300/30 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
+    }
+
+    .btn-danger {
+        @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500/20;
+    }
+
+    .btn-success {
+        @apply bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500/20;
+    }
+
+    .table-shell {
+        @apply overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800;
+        overscroll-behavior-inline: contain;
+    }
+
+    .data-table {
+        @apply min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700;
+    }
+
+    .data-table thead {
+        @apply bg-gray-50 dark:bg-gray-700/60;
+    }
+
+    .data-table th {
+        @apply sticky top-0 z-10 whitespace-nowrap bg-gray-50 px-4 py-3 text-right text-xs font-extrabold text-gray-500 dark:bg-gray-700 dark:text-gray-300 sm:px-5;
+    }
+
+    .data-table td {
+        @apply whitespace-nowrap px-4 py-3.5 align-middle text-gray-700 dark:text-gray-300 sm:px-5 sm:py-4;
+    }
+
+    .data-table tbody {
+        @apply divide-y divide-gray-100 bg-white dark:divide-gray-700 dark:bg-gray-800;
+    }
+
+    .data-table tbody tr {
+        @apply transition-colors hover:bg-primary-50/40 dark:hover:bg-primary-950/10;
+    }
+
+    .table-empty-cell {
+        @apply py-12 text-center text-sm text-gray-500;
+    }
+
+    .sidebar-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(209 213 219) transparent;
+        overscroll-behavior: contain;
+    }
+
+    .auth-background {
+        background-image:
+            linear-gradient(135deg, rgb(39 44 72 / .93), rgb(15 23 42 / .88)),
+            url("/vendor/arino/images/auth-background.png");
+        background-size: cover;
+        background-position: center;
+    }
+
+    .auth-background::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 18% 15%, rgb(255 130 41 / .24), transparent 28rem),
+            radial-gradient(circle at 90% 85%, rgb(255 255 255 / .08), transparent 22rem);
+    }
+
+    .flash-message {
+        @apply mb-5 flex items-start gap-3 rounded-2xl border p-4 text-sm shadow-sm;
+    }
+
+    .operational-chip {
+        @apply inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 shadow-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300;
+    }
+
+    .week-day-filter {
+        @apply relative flex min-w-[108px] flex-1 flex-col items-center rounded-2xl border border-gray-200 bg-white px-3 py-3 text-center shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md dark:border-gray-700 dark:bg-gray-800;
+    }
+
+    .week-day-filter.is-selected {
+        @apply border-primary bg-primary text-white shadow-lg shadow-primary/20;
+    }
+
+    .week-day-filter.is-today:not(.is-selected)::after {
+        content: '';
+        @apply absolute left-3 top-3 h-2 w-2 rounded-full bg-primary;
+    }
+
+    .slot-capacity-card {
+        @apply flex min-h-28 flex-col justify-between gap-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition duration-150 hover:border-primary/40 hover:shadow-md dark:border-gray-700 dark:bg-gray-800;
+    }
+
+    .slot-time {
+        @apply text-center text-sm font-extrabold text-secondary dark:text-white;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .slot-capacity-input {
+        @apply h-9 min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-1 text-center text-sm font-extrabold outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 dark:border-gray-600 dark:bg-gray-700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .slot-step {
+        @apply flex h-9 w-9 shrink-0 select-none items-center justify-center rounded-lg border border-gray-200 bg-white text-lg font-extrabold text-gray-600 hover:border-primary hover:bg-primary-50 hover:text-primary active:scale-95 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-primary-950/30;
+    }
+
+    .booking-slot-card {
+        @apply cursor-pointer rounded-2xl border border-gray-200 bg-white p-3 text-right shadow-sm transition duration-150 hover:border-primary hover:shadow-md focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 dark:border-gray-700 dark:bg-gray-800;
+    }
+
+    .booking-slot-card.is-selected {
+        @apply border-primary bg-primary-50 ring-2 ring-primary/20 dark:bg-primary-950/30;
+    }
+
+    .persian-date-field {
+        @apply min-w-0;
+    }
+
+    .persian-calendar-modal {
+        @apply fixed inset-0 z-[100] flex items-center justify-center p-4;
+    }
+
+    .persian-calendar-modal.hidden {
+        display: none;
+    }
+
+    .persian-calendar-backdrop {
+        @apply absolute inset-0 bg-gray-950/60 backdrop-blur-sm;
+    }
+
+    .persian-calendar-dialog {
+        @apply relative z-10 w-full max-w-sm overflow-hidden rounded-3xl border border-white/60 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800;
+        animation: calendar-enter .18s ease-out;
+    }
+
+    .calendar-nav {
+        @apply flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-2xl font-extrabold text-gray-700 hover:bg-primary-50 hover:text-primary active:scale-95 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-primary-950/30;
+    }
+
+    .calendar-day {
+        @apply aspect-square rounded-xl text-sm font-bold text-gray-700 transition hover:bg-primary-50 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/30 dark:text-gray-200 dark:hover:bg-primary-950/40;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .calendar-day:disabled {
+        @apply cursor-not-allowed text-gray-300 opacity-50 hover:bg-transparent hover:text-gray-300 dark:text-gray-600;
+    }
+
+    .calendar-day.is-today {
+        @apply ring-1 ring-primary text-primary;
+    }
+
+    .calendar-day.is-selected {
+        @apply bg-primary text-white shadow-md shadow-primary/25 hover:bg-primary-600 hover:text-white;
+    }
+
+    .quick-action-card {
+        @apply flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 dark:border-gray-700 dark:bg-gray-800;
+    }
+
+    .app-toast-region {
+        @apply pointer-events-none fixed inset-x-4 bottom-4 z-[150] flex flex-col items-center gap-2 sm:inset-x-auto sm:left-5 sm:items-end;
+    }
+
+    .app-toast {
+        @apply pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200;
+        animation: toast-enter .2s ease-out;
+    }
+
+    .app-toast.is-success {
+        @apply border-emerald-200 text-emerald-800 dark:border-emerald-800 dark:text-emerald-200;
+    }
+
+    .app-toast.is-error {
+        @apply border-red-200 text-red-800 dark:border-red-800 dark:text-red-200;
+    }
+}
+
+@layer utilities {
+    .bg-primary-grad {
+        background: linear-gradient(135deg, #ff9a52 0%, #ff6f0f 100%);
+    }
+
+    .text-balance {
+        text-wrap: balance;
+    }
+
+    .font-latin {
+        font-family: "IRANYekanX", Arial, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .numeric-value,
+    .time-value,
+    .money-value {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .safe-area-bottom {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .content-auto {
+        content-visibility: auto;
+        contain-intrinsic-size: 1px 500px;
+    }
+}
+
+@keyframes calendar-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toast-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 639px) {
+    .panel-page-heading {
+        font-size: 1.35rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding-inline: .85rem;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .btn-success {
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    [data-panel-sidebar],
+    header,
+    footer,
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .btn-success,
+    [data-theme-toggle] {
+        display: none !important;
+    }
+
+    main {
+        max-width: none !important;
+        padding: 0 !important;
+    }
+
+    .panel-card,
+    .table-shell {
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
 }

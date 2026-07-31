@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreVehicleRequest;
+use App\Http\Resources\Api\V1\VehicleResource;
 use App\Models\UserVehicle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,9 @@ class VehicleController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(['data' => request()->user()->vehicles()->with('vehicleType')->latest()->get()]);
+        return VehicleResource::collection(
+            request()->user()->vehicles()->with('vehicleType')->latest()->get(),
+        )->response();
     }
 
     public function store(StoreVehicleRequest $request): JsonResponse
@@ -29,7 +32,7 @@ class VehicleController extends Controller
             ]);
         });
 
-        return response()->json(['data' => $vehicle], 201);
+        return (new VehicleResource($vehicle->load('vehicleType')))->response()->setStatusCode(201);
     }
 
     public function destroy(UserVehicle $vehicle): JsonResponse

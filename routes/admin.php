@@ -1,19 +1,24 @@
 <?php
 
 use App\Enums\PermissionName;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CarWashController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware([
-        'auth',
-        'can:'.PermissionName::PLATFORM_ACCESS->value,
-    ])
+    ->middleware(['auth', 'admin'])
     ->group(function (): void {
-        Route::get('/', DashboardController::class)
+        Route::redirect('/', '/admin/dashboard')->name('root');
+
+        Route::get('/dashboard', DashboardController::class)
             ->middleware('can:'.PermissionName::PLATFORM_DASHBOARD_VIEW->value)
             ->name('dashboard');
 
@@ -49,27 +54,31 @@ Route::prefix('admin')
             ->middleware('can:'.PermissionName::PLATFORM_USERS_VIEW->value)
             ->name('users.index');
 
-        Route::view('/bookings', 'admin.bookings.index')
+        Route::get('/bookings', [BookingController::class, 'index'])
             ->middleware('can:'.PermissionName::PLATFORM_BOOKINGS_VIEW->value)
             ->name('bookings.index');
 
-        Route::view('/finance', 'admin.finance.index')
+        Route::get('/finance', [FinanceController::class, 'index'])
             ->middleware('can:'.PermissionName::PLATFORM_FINANCE_VIEW->value)
             ->name('finance.index');
 
-        Route::view('/reports', 'admin.reports.index')
+        Route::get('/reports', [ReportController::class, 'index'])
             ->middleware('can:'.PermissionName::PLATFORM_REPORTS_VIEW->value)
             ->name('reports.index');
 
-        Route::view('/roles', 'admin.roles.index')
+        Route::get('/roles', [RoleController::class, 'index'])
             ->middleware('can:'.PermissionName::PLATFORM_ROLES_MANAGE->value)
             ->name('roles.index');
 
-        Route::view('/settings', 'admin.settings.index')
+        Route::get('/settings', [SystemSettingController::class, 'edit'])
             ->middleware('can:'.PermissionName::PLATFORM_SETTINGS_MANAGE->value)
             ->name('settings.index');
 
-        Route::view('/audit-logs', 'admin.audit-logs.index')
+        Route::put('/settings', [SystemSettingController::class, 'update'])
+            ->middleware('can:'.PermissionName::PLATFORM_SETTINGS_MANAGE->value)
+            ->name('settings.update');
+
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])
             ->middleware('can:'.PermissionName::PLATFORM_AUDIT_VIEW->value)
             ->name('audit-logs.index');
     });

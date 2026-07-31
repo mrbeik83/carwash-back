@@ -1,6 +1,23 @@
-@extends('layouts.panel')
+@extends('layouts.admin')
 @section('title', 'کاربران')
-@section('navigation') <a class="block rounded-lg p-2 hover:bg-white/10" href="{{ route('admin.dashboard') }}">داشبورد</a><a class="block rounded-lg p-2 hover:bg-white/10" href="{{ route('admin.car-washes.index') }}">کارواش‌ها</a><a class="block rounded-lg p-2 hover:bg-white/10" href="{{ route('admin.users.index') }}">کاربران</a> @endsection
+@section('page-title', 'مدیریت کاربران')
 @section('content')
-<h1 class="mb-6 text-2xl font-bold">کاربران</h1><form class="mb-5 flex gap-3"><input name="q" value="{{ request('q') }}" class="w-full rounded-xl border p-3" placeholder="نام، موبایل یا ایمیل"><button class="rounded-xl bg-slate-900 px-5 text-white">جستجو</button></form><div class="overflow-x-auto rounded-2xl bg-white shadow-sm"><table class="w-full"><thead class="bg-slate-100"><tr><th class="p-3">نام</th><th>موبایل</th><th>ایمیل</th><th>وضعیت</th><th>عضویت‌ها</th><th>تاریخ</th></tr></thead><tbody>@foreach($users as $user)<tr class="border-t"><td class="p-3">{{ $user->full_name }}</td><td dir="ltr">{{ $user->mobile }}</td><td>{{ $user->email }}</td><td>{{ $user->status->value }}</td><td>{{ $user->carWashes()->count() }}</td><td>{{ $user->created_at }}</td></tr>@endforeach</tbody></table></div><div class="mt-4">{{ $users->links() }}</div>
+<div class="mb-6"><h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">کاربران سامانه</h1><p class="mt-1 text-sm text-gray-500">مشتریان، کارکنان کارواش و حساب‌های مدیریتی</p></div>
+<form class="panel-card mb-5 grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+    <div class="relative flex-1"><x-icon name="search" class="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"/><input name="q" value="{{ request('q') }}" class="form-control pr-10" placeholder="نام، موبایل یا ایمیل"></div>
+    <button class="btn-primary">جست‌وجو</button>
+</form>
+<div class="table-shell"><div class="overflow-x-auto"><table class="data-table">
+<thead><tr><th>کاربر</th><th>موبایل</th><th>ایمیل</th><th>نوع حساب</th><th>وضعیت</th><th>آخرین ورود</th></tr></thead>
+<tbody>
+@forelse($users as $user)
+<tr>
+<td><div class="flex items-center gap-3"><img src="{{ asset('vendor/arino/images/profile.jpg') }}" class="h-10 w-10 rounded-full object-cover" alt=""><div><div class="font-semibold text-gray-900 dark:text-white">{{ $user->full_name ?: 'بدون نام' }}</div><div class="text-xs text-gray-500">{{ $user->public_id }}</div></div></div></td>
+<td dir="ltr">{{ $user->mobile ?: '—' }}</td><td dir="ltr">{{ $user->email ?: '—' }}</td>
+<td>@if($user->is_super_admin)<span class="rounded-full bg-secondary px-3 py-1 text-xs text-white">مدیر کل</span>@elseif($user->carWashes()->exists())<span class="rounded-full bg-primary-50 px-3 py-1 text-xs text-primary-700">عضو کارواش</span>@else<span class="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">مشتری</span>@endif</td>
+<td><x-status-badge :value="$user->status"/></td><td>{{ \App\Support\PersianDate::dateTime($user->last_login_at) }}</td>
+</tr>
+@empty<tr><td colspan="6"><x-empty-state title="کاربری پیدا نشد" icon="users"/></td></tr>@endforelse
+</tbody></table></div></div>
+<div class="mt-5">{{ $users->links() }}</div>
 @endsection

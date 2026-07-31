@@ -7,6 +7,7 @@ use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreBookingRequest;
+use App\Http\Resources\Api\V1\BookingResource;
 use App\Models\Booking;
 use App\Services\BookingLifecycleService;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +22,7 @@ class BookingController extends Controller
             ->latest()
             ->paginate(20);
 
-        return response()->json($bookings);
+        return BookingResource::collection($bookings)->response();
     }
 
     public function store(
@@ -42,22 +43,19 @@ class BookingController extends Controller
             'referrer' => $request->headers->get('referer'),
         ]);
 
-        return response()->json(['data' => $booking], 201);
+        return (new BookingResource($booking))->response()->setStatusCode(201);
     }
 
     public function show(Request $request, Booking $booking): JsonResponse
     {
         abort_unless($booking->customer_user_id === $request->user()->getKey(), 404);
 
-        return response()->json([
-            'data' => $booking->load([
-                'carWash',
-                'slot',
-                'items',
-                'payments',
-                'statusHistory',
-            ]),
-        ]);
+        return (new BookingResource($booking->load([
+            'carWash',
+            'slot',
+            'items',
+            'payments',
+        ])))->response();
     }
 
     public function cancel(
@@ -84,6 +82,6 @@ class BookingController extends Controller
             $data['reason'] ?? null,
         );
 
-        return response()->json(['data' => $updated]);
+        return (new BookingResource($updated->loadMissing(['carWash', 'slot', 'items', 'payments'])))->response();
     }
 }

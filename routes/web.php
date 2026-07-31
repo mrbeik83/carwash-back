@@ -1,32 +1,27 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\InvitationController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function (): void {
-    Route::get('/login', [AuthenticatedSessionController::class, 'create'])
-        ->name('login');
+Route::get('/', function (Request $request) {
+    if (! $request->user()) {
+        return view('auth.portal');
+    }
 
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-        ->name('login.store');
+    if ($request->user()->is_super_admin) {
+        return redirect()->route('admin.dashboard');
+    }
 
-    Route::post('/login/request-otp', [AuthenticatedSessionController::class, 'requestOtp'])
-        ->middleware('throttle:6,1')
-        ->name('login.otp.request');
+    return redirect()->route('carwash.select');
+})->name('home');
 
-    Route::post('/login/verify-otp', [AuthenticatedSessionController::class, 'verifyOtp'])
-        ->middleware('throttle:10,1')
-        ->name('login.otp.verify');
-});
+Route::view('/login', 'auth.portal')->middleware('guest')->name('login');
+
+require __DIR__.'/admin-auth.php';
+require __DIR__.'/carwash-auth.php';
 
 Route::middleware('auth')->group(function (): void {
-    Route::get('/', [AuthenticatedSessionController::class, 'home'])
-        ->name('account.home');
-
-    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
-
     Route::get('/invitations/{token}', [InvitationController::class, 'show'])
         ->name('invitations.show');
 
