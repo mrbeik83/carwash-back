@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CarWashPanel;
 
+use App\Enums\BookingPaymentStatus;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -93,8 +94,8 @@ class PaymentController extends Controller
 
             $lockedBooking->update([
                 'payment_status' => $newPaid >= $lockedBooking->payable_amount
-                    ? 'paid'
-                    : 'partial',
+                    ? BookingPaymentStatus::PAID
+                    : BookingPaymentStatus::PARTIAL,
             ]);
         });
 

@@ -486,6 +486,153 @@
     .app-toast.is-error {
         @apply border-red-200 text-red-800 dark:border-red-800 dark:text-red-200;
     }
+
+    /* Booking operations */
+    .booking-week-scroll {
+        scroll-snap-type: inline mandatory;
+        scrollbar-width: thin;
+    }
+
+    .booking-week-scroll .week-day-filter {
+        scroll-snap-align: start;
+    }
+
+    .booking-stat-card {
+        @apply flex min-h-28 items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600;
+    }
+
+    .booking-stat-icon {
+        @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl;
+    }
+
+    .booking-stat-icon svg {
+        @apply h-5 w-5;
+    }
+
+    .booking-stat-label {
+        @apply truncate text-xs font-semibold text-gray-500 dark:text-gray-400;
+    }
+
+    .booking-stat-value {
+        @apply mt-1 text-2xl font-black leading-tight text-gray-950 dark:text-white;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .booking-stat-hint {
+        @apply mt-1 truncate text-xs text-gray-400 dark:text-gray-500;
+    }
+
+    details > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    details[open] .filter-chevron,
+    details[open] .booking-form-chevron {
+        transform: rotate(180deg);
+    }
+
+    .filter-chevron,
+    .booking-form-chevron {
+        @apply transition-transform duration-200;
+    }
+
+    .booking-view-switcher {
+        @apply inline-flex w-full rounded-xl border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800 sm:w-auto;
+    }
+
+    .booking-view-button {
+        @apply inline-flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-extrabold text-gray-500 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-white sm:flex-none;
+    }
+
+    .booking-view-button.is-active {
+        @apply bg-white text-primary shadow-sm dark:bg-gray-700 dark:text-primary-300;
+    }
+
+    .booking-timeline-slot {
+        @apply relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition duration-200 hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 sm:flex-row sm:p-5;
+    }
+
+    .booking-timeline-slot::before {
+        content: '';
+        @apply absolute inset-y-0 right-0 w-1 bg-gray-200 dark:bg-gray-700;
+    }
+
+    .booking-timeline-slot.is-current {
+        @apply border-primary/50 bg-primary-50/30 ring-2 ring-primary/10 dark:bg-primary-950/10;
+    }
+
+    .booking-timeline-slot.is-current::before {
+        @apply bg-primary;
+    }
+
+    .booking-timeline-slot.is-closed {
+        @apply bg-gray-50/80 opacity-80 dark:bg-gray-900/40;
+    }
+
+    .booking-timeline-time {
+        @apply relative flex shrink-0 flex-row items-center gap-2 border-b border-gray-100 pb-3 text-right dark:border-gray-700 sm:w-20 sm:flex-col sm:items-start sm:border-b-0 sm:border-l sm:pb-0 sm:pl-4;
+    }
+
+    .booking-current-label {
+        @apply rounded-full bg-primary px-2 py-0.5 text-[10px] font-extrabold text-white shadow-sm;
+    }
+
+    .booking-queue-card {
+        @apply flex min-w-0 items-start justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50/70 p-3 transition duration-150 hover:border-primary/40 hover:bg-primary-50/50 hover:shadow-sm focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 dark:border-gray-700 dark:bg-gray-900/30 dark:hover:bg-primary-950/15;
+    }
+
+    .booking-queue-avatar {
+        @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary-100 text-sm font-black text-secondary-700 dark:bg-secondary-700 dark:text-white;
+    }
+
+    .booking-queue-actions {
+        @apply flex w-full shrink-0 flex-row items-center justify-between gap-2 border-t border-gray-100 pt-2 dark:border-gray-700 sm:w-auto sm:flex-col sm:items-end sm:border-t-0 sm:pt-0;
+    }
+
+    .booking-quick-action {
+        @apply inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-lg bg-primary px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-primary-600 focus-visible:ring-4 focus-visible:ring-primary/20;
+    }
+
+    .booking-quick-action.is-success {
+        @apply bg-emerald-600 hover:bg-emerald-700 focus-visible:ring-emerald-500/20;
+    }
+
+    .booking-empty-slot {
+        @apply rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-4 py-3 text-xs leading-6 text-gray-500 dark:border-gray-700 dark:bg-gray-900/20 dark:text-gray-400;
+    }
+
+    .booking-list-table td {
+        @apply align-top;
+    }
+
+    .booking-form-section {
+        @apply flex items-start gap-3 sm:gap-4;
+    }
+
+    .booking-form-section-number {
+        @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary text-sm font-black text-white shadow-sm;
+    }
+
+    .booking-service-option {
+        @apply relative flex cursor-pointer items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 transition duration-150 hover:border-primary/50 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800;
+    }
+
+    .booking-service-option.is-selected {
+        @apply border-primary bg-primary-50/60 ring-2 ring-primary/10 dark:bg-primary-950/20;
+    }
+
+    .booking-service-check {
+        @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-100 text-transparent transition dark:bg-gray-700;
+    }
+
+    .booking-service-option.is-selected .booking-service-check {
+        @apply bg-primary text-white;
+    }
+
+    .booking-form-submit-bar {
+        @apply sticky bottom-0 z-10 flex flex-col items-stretch justify-between gap-3 border-t border-gray-200 bg-white/95 px-4 py-4 shadow-[0_-10px_30px_rgba(15,23,42,.06)] backdrop-blur-xl dark:border-gray-700 dark:bg-gray-800/95 sm:flex-row sm:items-center sm:px-6;
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
 }
 
 @layer utilities {
@@ -554,6 +701,24 @@
     .btn-danger,
     .btn-success {
         min-height: 44px;
+    }
+}
+
+@media (max-width: 639px) {
+    .booking-week-scroll .week-day-filter {
+        min-width: 7.25rem;
+    }
+
+    .booking-timeline-slot {
+        padding-right: 1.1rem;
+    }
+
+    .booking-queue-card {
+        @apply flex-col;
+    }
+
+    .booking-queue-card > :last-child {
+        @apply w-full flex-row items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-700;
     }
 }
 

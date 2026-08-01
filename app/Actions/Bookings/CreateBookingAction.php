@@ -2,6 +2,7 @@
 
 namespace App\Actions\Bookings;
 
+use App\Enums\BookingPaymentStatus;
 use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Enums\CarWashStatus;
@@ -192,7 +193,7 @@ class CreateBookingAction
                 'vehicle_id' => $vehicle?->getKey(),
                 'booking_slot_id' => $slot->getKey(),
                 'status' => $status,
-                'payment_status' => 'unpaid',
+                'payment_status' => BookingPaymentStatus::UNPAID,
                 'source' => $source,
                 'customer_name' => $data['customer_name'],
                 'customer_mobile' => $data['customer_mobile'],

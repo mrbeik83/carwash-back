@@ -506,6 +506,123 @@ const initSlotPicker = () => {
             }
         });
     });
+
+    select.addEventListener('change', () => {
+        cards.forEach((card) => {
+            const active = String(card.dataset.slotId) === String(select.value);
+            card.classList.toggle('is-selected', active);
+            card.setAttribute('aria-selected', String(active));
+        });
+    });
+};
+
+const initBookingViews = () => {
+    document.querySelectorAll('[data-booking-views]').forEach((container) => {
+        const buttons = [...container.querySelectorAll('[data-booking-view-button]')];
+        const panels = [...container.querySelectorAll('[data-booking-view-panel]')];
+        if (!buttons.length || !panels.length) return;
+
+        const storageKey = `carwash-booking-view:${window.location.pathname}`;
+        let preferred = container.dataset.defaultView || 'timeline';
+        try {
+            preferred = window.localStorage.getItem(storageKey) || preferred;
+        } catch (_) {
+            // Local storage can be unavailable in strict privacy mode.
+        }
+
+        if (!buttons.some((button) => button.dataset.bookingViewButton === preferred)) preferred = 'timeline';
+
+        const activate = (view, persist = true) => {
+            buttons.forEach((button) => {
+                const active = button.dataset.bookingViewButton === view;
+                button.classList.toggle('is-active', active);
+                button.setAttribute('aria-selected', String(active));
+                button.setAttribute('tabindex', active ? '0' : '-1');
+            });
+
+            panels.forEach((panel) => {
+                const active = panel.dataset.bookingViewPanel === view;
+                panel.classList.toggle('hidden', !active);
+                panel.setAttribute('aria-hidden', String(!active));
+            });
+
+            if (persist) {
+                try { window.localStorage.setItem(storageKey, view); } catch (_) { /* noop */ }
+            }
+        };
+
+        buttons.forEach((button) => button.addEventListener('click', () => activate(button.dataset.bookingViewButton)));
+        activate(preferred, false);
+    });
+};
+
+const initBookingCreateForm = () => {
+    const details = document.querySelector('[data-booking-form-details]');
+    const form = document.querySelector('[data-booking-create-form]');
+    if (!details || !form) return;
+
+    const openForm = (scroll = true) => {
+        details.open = true;
+        if (scroll) window.requestAnimationFrame(() => details.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    };
+
+    document.querySelectorAll('[data-open-booking-form]').forEach((link) => {
+        link.addEventListener('click', () => openForm(false));
+    });
+
+    if (window.location.hash === '#new-booking') openForm(false);
+    window.addEventListener('hashchange', () => {
+        if (window.location.hash === '#new-booking') openForm(false);
+    });
+
+    const vehicleType = form.querySelector('[data-booking-vehicle-type]');
+    const serviceOptions = [...form.querySelectorAll('[data-booking-service-option]')];
+    const estimate = form.querySelector('[data-booking-estimate]');
+    const numberFormatter = new Intl.NumberFormat('fa-IR');
+
+    const servicePrice = (option) => {
+        let map = {};
+        try { map = JSON.parse(option.dataset.priceMap || '{}'); } catch (_) { map = {}; }
+        return Number(map[String(vehicleType?.value)] ?? option.dataset.basePrice ?? 0);
+    };
+
+    const updateServices = () => {
+        let total = 0;
+        let selected = 0;
+
+        serviceOptions.forEach((option) => {
+            const checkbox = option.querySelector('[data-booking-service-checkbox]');
+            const active = Boolean(checkbox?.checked);
+            option.classList.toggle('is-selected', active);
+            if (active) {
+                selected += 1;
+                total += servicePrice(option);
+            }
+        });
+
+        if (estimate) {
+            estimate.textContent = selected
+                ? `برآورد اولیه: ${numberFormatter.format(total)} ریال`
+                : 'برآورد اولیه: ۰ ریال';
+        }
+    };
+
+    serviceOptions.forEach((option) => {
+        option.querySelector('[data-booking-service-checkbox]')?.addEventListener('change', updateServices);
+    });
+    vehicleType?.addEventListener('change', updateServices);
+    updateServices();
+
+    form.addEventListener('submit', (event) => {
+        const selectedServices = form.querySelectorAll('[data-booking-service-checkbox]:checked');
+        if (selectedServices.length) return;
+
+        event.preventDefault();
+        openForm(false);
+        showToast('برای ثبت رزرو، حداقل یک خدمت را انتخاب کنید.', 'error');
+        serviceOptions[0]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        serviceOptions[0]?.querySelector('input')?.focus({ preventScroll: true });
+    });
 };
 
 const initSidebar = () => {
@@ -624,6 +741,62 @@ const initAuthTabs = () => {
     activate(document.querySelector('[data-auth-tabs]')?.dataset.defaultTab || tabs[0].dataset.authTab);
 };
 
+
+const initPermissionMatrices = () => {
+    document.querySelectorAll('[data-permission-matrix]').forEach((matrix) => {
+        const allCheckboxes = () => [...matrix.querySelectorAll('[data-permission-checkbox]')];
+        const editableCheckboxes = () => allCheckboxes().filter((checkbox) => !checkbox.disabled);
+        const toFa = (value) => String(value).replace(/\d/g, (digit) => persianDigits[Number(digit)]);
+
+        const update = () => {
+            const selected = allCheckboxes().filter((checkbox) => checkbox.checked).length;
+            matrix.querySelectorAll('[data-permissions-total]').forEach((element) => {
+                element.textContent = toFa(selected);
+            });
+
+            matrix.querySelectorAll('[data-permission-group]').forEach((group) => {
+                const checkboxes = [...group.querySelectorAll('[data-permission-checkbox]')];
+                const selectedInGroup = checkboxes.filter((checkbox) => checkbox.checked).length;
+                const counter = group.querySelector('[data-group-selected]');
+                const toggle = group.querySelector('[data-group-toggle]');
+
+                if (counter) counter.textContent = toFa(selectedInGroup);
+                if (toggle) {
+                    const editable = checkboxes.filter((checkbox) => !checkbox.disabled);
+                    const allSelected = editable.length > 0 && editable.every((checkbox) => checkbox.checked);
+                    toggle.textContent = allSelected ? 'پاک‌کردن انتخاب این بخش' : 'انتخاب همه این بخش';
+                    toggle.dataset.mode = allSelected ? 'clear' : 'select';
+                }
+            });
+        };
+
+        allCheckboxes().forEach((checkbox) => checkbox.addEventListener('change', update));
+
+        matrix.querySelector('[data-permissions-select-all]')?.addEventListener('click', () => {
+            editableCheckboxes().forEach((checkbox) => { checkbox.checked = true; });
+            update();
+        });
+
+        matrix.querySelector('[data-permissions-clear]')?.addEventListener('click', () => {
+            editableCheckboxes().forEach((checkbox) => { checkbox.checked = false; });
+            update();
+        });
+
+        matrix.querySelectorAll('[data-group-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const group = button.closest('[data-permission-group]');
+                const shouldSelect = button.dataset.mode !== 'clear';
+                group?.querySelectorAll('[data-permission-checkbox]:not(:disabled)').forEach((checkbox) => {
+                    checkbox.checked = shouldSelect;
+                });
+                update();
+            });
+        });
+
+        update();
+    });
+};
+
 const initForms = () => {
     document.querySelectorAll('form').forEach((form) => {
         form.addEventListener('submit', (event) => {
@@ -661,5 +834,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initPersianDatePicker();
     initWeeklySchedule();
     initSlotPicker();
+    initBookingViews();
+    initBookingCreateForm();
+    initPermissionMatrices();
     initForms();
 });
